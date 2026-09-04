@@ -1,0 +1,24 @@
+{
+  "name": "每日自推卡 · 九宫推演工具",
+  "short_name": "每日自推卡",
+  "description": "卦学 × 干支 × 神煞 × 黄历 · 纯文化数字游戏",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F7F1E3",
+  "theme_color": "#8B1A1A",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
