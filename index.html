@@ -668,18 +668,39 @@ function todayStr(){
   const t=new Date();
   return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
 }
+function copyText(text, tip){
+  const done=()=>alert(tip);
+  // 兼容降级：隐藏 textarea + execCommand
+  function legacy(){
+    try{
+      const ta=document.createElement('textarea');
+      ta.value=text;
+      ta.setAttribute('readonly','');
+      ta.style.position='fixed'; ta.style.top='-9999px'; ta.style.left='-9999px';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length);
+      const ok=document.execCommand('copy');
+      document.body.removeChild(ta);
+      if(ok){ done(); return true; }
+    }catch(e){}
+    return false;
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>{ if(!legacy()) alert('复制失败，请长按手动复制：'+text); });
+  } else {
+    if(!legacy()) alert('复制失败，请长按手动复制：'+text);
+  }
+}
 function copyNums(){
   const nums=[...document.querySelectorAll('#numList .num-chip')].map(e=>+e.textContent).sort((a,b)=>a-b).map(n=>String(n).padStart(2,'0'));
   const text=nums.join(' ');
-  if(navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>alert('已复制 '+nums.length+' 个数（升序）：'+text)); }
-  else { alert('推演结果 '+nums.length+' 个（升序）：'+text); }
+  copyText(text, '已复制 '+nums.length+' 个数（升序）：'+text);
 }
 function copySchemeNums(id){
   const s=loadSchemes().find(x=>x.id===id); if(!s) return;
   const nums=[...s.nums].map(Number).sort((a,b)=>a-b).map(n=>String(n).padStart(2,'0'));
   const text=nums.join(' ');
-  if(navigator.clipboard){ navigator.clipboard.writeText(text).then(()=>alert('已复制方案「'+s.name+'」'+nums.length+' 个数（升序）：'+text)); }
-  else { alert('方案「'+s.name+'」结果 '+nums.length+' 个（升序）：'+text); }
+  copyText(text, '已复制方案「'+s.name+'」'+nums.length+' 个数（升序）：'+text);
 }
 
 /* ========== 反向求解（目标反推）========== */
