@@ -100,6 +100,8 @@
   summary{cursor:pointer; color:var(--cinnabar); font-size:13.5px; letter-spacing:1px;}
   .guide-table td:first-child{white-space:nowrap; font-weight:600; color:var(--ink);}
   @media(max-width:560px){ .num-chip{width:44px;height:44px;font-size:15px;} }
+  .fold-h{cursor:pointer; user-select:none; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;}
+  .fold-arrow{color:var(--cinnabar); font-size:14px; transition:transform .25s;}
 </style>
 </head>
 <body>
@@ -126,8 +128,9 @@
 </div>
 
 <!-- 今日历法信息 -->
-<div class="card">
-  <h2>一 · 今日历法要素（自动推演）</h2>
+<div class="card foldable" data-fold="c1">
+  <h2 class="fold-h" onclick="toggleFold('c1')">一 · 今日历法要素（自动推演） <span class="fold-arrow">▾</span></h2>
+    <div class="fold-body">
   <div class="kv" id="infoBar" style="margin-bottom:12px;"></div>
   <table>
     <tr>
@@ -142,10 +145,12 @@
   </table>
   <p class="small muted" style="margin-top:8px;">说明：节气日期为内置近似值（±1 天），仅供娱乐推演使用；黄历要素为简化算法。</p>
 </div>
+  </div>
 
 <!-- 参数面板 -->
-<div class="card">
-  <h2>二 · 可调参数（改完点“今日推演”刷新）</h2>
+<div class="card foldable" data-fold="c2">
+  <h2 class="fold-h" onclick="toggleFold('c2')">二 · 可调参数（改完点“今日推演”刷新） <span class="fold-arrow">▾</span></h2>
+    <div class="fold-body">
   <div class="param-grid">
     <div class="param" style="grid-column:1 / -1;">
       <label>推演模式
@@ -192,8 +197,8 @@
     </div>
     <div class="param">
       <label>范围 最大数</label>
-      <div class="desc">推演数字上限（默认 81，可改成 50 / 100 等）</div>
-      <input type="number" id="pMax" value="81" min="2" max="2000" onchange="run()">
+      <div class="desc">推演数字上限（默认 49，可改成 81 / 100 等）</div>
+      <input type="number" id="pMax" value="49" min="2" max="2000" onchange="run()">
     </div>
     <div class="param" style="grid-column:1 / -1;">
       <label>本命素材库（逗号分隔，可增删）</label>
@@ -213,10 +218,12 @@
   </div>
   <div id="schemeList" style="margin-top:16px;"></div>
 </div>
+  </div>
 
 <!-- 结果 -->
-<div class="card">
-  <h2>三 · 今日推演结果</h2>
+<div class="card foldable" data-fold="c3">
+  <h2 class="fold-h" onclick="toggleFold('c3')">三 · 今日推演结果 <span class="fold-arrow">▾</span></h2>
+    <div class="fold-body">
   <div class="row" style="justify-content:flex-end; margin-bottom:6px;">
     <button class="btn ghost" onclick="copyNums()">复制号码</button>
   </div>
@@ -229,10 +236,12 @@
     <span style="background:#fff;border:1px solid var(--line);"></span>范围内九段格
   </div>
 </div>
+  </div>
 
 <!-- 反向求解 -->
-<div class="card">
-  <h2>四 · 反向求解（目标反推）</h2>
+<div class="card foldable" data-fold="c4">
+  <h2 class="fold-h" onclick="toggleFold('c4')">四 · 反向求解（目标反推） <span class="fold-arrow">▾</span></h2>
+    <div class="fold-body">
   <div class="row" style="justify-content:flex-start; flex-wrap:wrap; gap:10px;">
     <label>目标号码：</label>
     <input type="text" id="pTarget" placeholder="例如 41,45,49,58,66" style="width:260px; padding:7px 10px; border:1px solid var(--line); border-radius:6px; font-size:14px;">
@@ -241,10 +250,12 @@
   <div id="reverseResult" style="margin-top:14px;"></div>
   <p class="small muted" style="margin-top:8px;">说明：枚举行位系数 A/B、宫位偏移、本命日签数的全部组合，找出最能让推演命中你目标号码的参数方案（“目标拟合”玩法）。</p>
 </div>
+  </div>
 
 <!-- 速查表 -->
-<div class="card">
-  <h2>五 · 速查表 & 规则</h2>
+<div class="card foldable" data-fold="c5">
+  <h2 class="fold-h" onclick="toggleFold('c5')">五 · 速查表 & 规则 <span class="fold-arrow">▾</span></h2>
+    <div class="fold-body">
   <details open>
     <summary>本命资料（可修改 —— 自动生成本命素材库）</summary>
     <div class="row" style="gap:14px;flex-wrap:wrap;margin-top:6px;">
@@ -327,6 +338,7 @@
     </table>
   </details>
 </div>
+  </div>
 
 <div class="footer">
   纯文化数字游戏 · 不作投注、不作预测依据 · 姓名+生辰属敏感信息，勿外传
@@ -499,7 +511,7 @@ function buildMaterial(par){
   for(const n of reordered){ if(uniq.includes(n)) continue; uniq.push(n); }
   // 取 count 个，不足则补充（补充数落在范围内）
   const K=par.count||11;
-  const minN=par.min||1, maxN=par.max||81, N=maxN-minN+1;
+  const minN=par.min||1, maxN=par.max||49, N=maxN-minN+1;
   const final=[...uniq.slice(0,K)];
   let k=1;
   while(final.length<K){
@@ -519,7 +531,7 @@ function compute(par){
   const REV=!!par.reverse;
   const A=par.coefA, B=par.coefB;
   const off=REV ? -par.gongOffset : par.gongOffset;
-  const min=par.min||1, max=par.max||81, N=max-min+1, K=par.count||11;
+  const min=par.min||1, max=par.max||49, N=max-min+1, K=par.count||11;
   const base=Math.floor(N/9), r=N%9;
   const nums=[];
   const rows=[], cols=[];
@@ -579,7 +591,7 @@ function currentParams(){
   const benMing=(document.getElementById('pBenMing').value||'').split(/[,，\s]+/).map(Number).filter(n=>n>=1&&n<=2000);
   const seed=(document.getElementById('pSeed').value||'').split(/[,，\s]+/).map(Number).filter(n=>n>=1&&n<=2000);
   let minV=Math.round(+document.getElementById('pMin').value)||1;
-  let maxV=Math.round(+document.getElementById('pMax').value)||81;
+  let maxV=Math.round(+document.getElementById('pMax').value)||49;
   if(minV<1) minV=1; if(maxV<minV+1) maxV=minV+1;
   const count=Math.max(1, Math.min(30, +document.getElementById('pCount').value||11));
   return {
@@ -668,6 +680,26 @@ function todayStr(){
   const t=new Date();
   return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
 }
+const FOLD_KEY='mrzk_fold_v1';
+function loadFold(){ try{ return JSON.parse(localStorage.getItem(FOLD_KEY)||'{}'); }catch(e){ return {}; } }
+function saveFold(f){ try{ localStorage.setItem(FOLD_KEY, JSON.stringify(f)); }catch(e){} }
+function toggleFold(key){
+  const f=loadFold();
+  f[key]=!f[key];
+  saveFold(f);
+  applyFold();
+}
+function applyFold(){
+  const f=loadFold();
+  document.querySelectorAll('.card.foldable').forEach(card=>{
+    const key=card.dataset.fold;
+    const body=card.querySelector('.fold-body');
+    const arrow=card.querySelector('.fold-arrow');
+    const closed=!!f[key];
+    if(body) body.style.display=closed?'none':'';
+    if(arrow) arrow.textContent=closed?'▸':'▾';
+  });
+}
 function copyText(text, tip){
   const done=()=>alert(tip);
   // 兼容降级：隐藏 textarea + execCommand
@@ -753,7 +785,7 @@ function applyReverse(A,B,off,dq){
 
 /* ========== 方案历史 ========== */
 const SCHEME_KEY='mrzk_schemes_v1';
-const DEFAULTS={dayQian:0,gongOffset:0,coefA:1,coefB:1,count:11,min:1,max:81,benMing:[],seed:[],reverse:0,sxwx:1};
+const DEFAULTS={dayQian:0,gongOffset:0,coefA:1,coefB:1,count:11,min:1,max:49,benMing:[],seed:[],reverse:0,sxwx:1};
 
 function loadSchemes(){ try{ return JSON.parse(localStorage.getItem(SCHEME_KEY)||'[]'); }catch(e){ return []; } }
 function saveSchemes(list){ localStorage.setItem(SCHEME_KEY, JSON.stringify(list)); }
@@ -952,6 +984,7 @@ function renderBenMingInfo(r){
 
 // 初始化
 (function(){
+  applyFold();
   document.getElementById('dateInput').value=todayStr();
   const prof=loadProfile();
   if(prof){
