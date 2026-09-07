@@ -110,6 +110,8 @@
   .hist-ok{color:var(--green); font-weight:700;}
   .hist-no{color:var(--cinnabar); font-weight:700;}
   .hist-pending{color:var(--muted);}
+.hist-nums{display:block;max-height:2.7em;line-height:1.35em;overflow:hidden;word-break:break-all;}
+.hist-nums.open{max-height:none;}
 </style>
 </head>
 <body>
@@ -1050,7 +1052,12 @@ function renderHistory(){
     else if(!arr.length){ mark='<span class="hist-pending">未推演</span>'; }
     else { judged++; mark=arr.includes(String(rv).padStart(2,'0'))?'<span class="hist-ok">✅</span>':'<span class="hist-no">❌</span>'; if(mark.indexOf('ok')>=0) hits++; }
     const copyStr=arr.join(' ');
-    rows.push('<tr><td>'+ds+'</td><td style="text-align:left;font-size:12px;">'+(arr.length?arr.join(' '):'—')+'</td><td>'+(rv!==undefined?String(rv).padStart(2,'0'):'—')+'</td><td>'+mark+'</td><td style="white-space:nowrap;">'+(arr.length?'<button class="btn ghost" style="padding:2px 10px;font-size:12px;" onclick="copyText(\''+copyStr+'\',\'已复制 '+ds+' 号码：'+copyStr+'\')">复制</button>':'')+'<button class="btn ghost" style="padding:2px 10px;font-size:12px;margin-left:4px;" onclick="editRef(\''+ds+'\')">填/改</button></td></tr>');
+    let numHtml='—';
+    if(arr.length){
+      numHtml='<span class="hist-nums" id="hm_'+ds+'">'+arr.join(' ')+'</span>';
+      if(arr.length>7) numHtml+=' <a href="javascript:void(0)" onclick="toggleHistNums(\''+ds+'\',this)" style="color:var(--cinnabar);font-size:11px;white-space:nowrap;">⋯</a>';
+    }
+    rows.push('<tr><td>'+ds+'</td><td style="text-align:left;font-size:12px;">'+numHtml+'</td><td>'+(rv!==undefined?String(rv).padStart(2,'0'):'—')+'</td><td>'+mark+'</td><td style="white-space:nowrap;">'+(arr.length?'<button class="btn ghost" style="padding:2px 10px;font-size:12px;" onclick="copyText(\''+copyStr+'\',\'已复制 '+ds+' 号码：'+copyStr+'\')">复制</button>':'')+'<button class="btn ghost" style="padding:2px 10px;font-size:12px;margin-left:4px;" onclick="editRef(\''+ds+'\')">填/改</button></td></tr>');
     d.setDate(d.getDate()+1);
   }
   // 倒序：最新日期在最上面
@@ -1074,6 +1081,12 @@ function renderHistory(){
 function toggleHistExpand(){
   try{ localStorage.setItem('ztk_hist_expand', localStorage.getItem('ztk_hist_expand')==='1'?'0':'1'); }catch(e){}
   renderHistory();
+}
+function toggleHistNums(ds,btn){
+  const span=document.getElementById('hm_'+ds);
+  if(!span||!btn) return;
+  const open=span.classList.toggle('open');
+  btn.textContent=open?'收起':'⋯';
 }
 function editRef(ds){
   const refs=getRefs();
