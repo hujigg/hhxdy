@@ -314,7 +314,7 @@
   <div class="param-grid">
     <div class="param" style="grid-column:1 / -1;">
       <label>推演模式
-        <select id="pMode" onchange="run()" style="margin-left:10px;padding:4px 8px;border:1px solid var(--line);border-radius:6px;">
+        <select id="pMode" onchange="run();saveParams()" style="margin-left:10px;padding:4px 8px;border:1px solid var(--line);border-radius:6px;">
           <option value="0">正常版（吉神正用）</option>
           <option value="1" selected>逆天版（冲煞反用）</option>
         </select>
@@ -322,7 +322,7 @@
       <div class="desc">正常版用当日吉神方向；逆天版用冲煞、相克五行，宫位/动爻方向全反，结果风格相反。</div>
     </div>
     <div class="param" style="grid-column:1 / -1;">
-      <label><input type="checkbox" id="pSxwx" onchange="run()" style="vertical-align:-2px; margin-right:4px;">生肖五行对照（1-49 图例）</label>
+      <label><input type="checkbox" id="pSxwx" onchange="run();saveParams()" style="vertical-align:-2px; margin-right:4px;">生肖五行对照（1-49 图例）</label>
       <div class="desc">按当日生肖、五行取对照号码入素材；逆天版自动换用相冲生肖、相克五行。</div>
     </div>
     <div class="param">
@@ -333,32 +333,32 @@
     <div class="param">
       <label>宫位偏移 <span class="val" id="vGongOffset">-1</span></label>
       <div class="desc">让号偏重某个区间（-4 ~ +4 宫）</div>
-      <input type="range" id="pGongOffset" min="-4" max="4" step="1" value="-1" oninput="syncParam('pGongOffset','vGongOffset')">
+      <input type="range" id="pGongOffset" min="-4" max="4" step="1" value="-1" oninput="syncParam('pGongOffset','vGongOffset');saveParams()">
     </div>
     <div class="param">
       <label>行位系数 A <span class="val" id="vCoefA">4</span></label>
       <div class="desc">行位公式：动爻 × A（改行走节奏）</div>
-      <input type="range" id="pCoefA" min="1" max="9" step="1" value="4" oninput="syncParam('pCoefA','vCoefA')">
+      <input type="range" id="pCoefA" min="1" max="9" step="1" value="4" oninput="syncParam('pCoefA','vCoefA');saveParams()">
     </div>
     <div class="param">
       <label>行位系数 B <span class="val" id="vCoefB">4</span></label>
       <div class="desc">行位公式：变卦序 × B</div>
-      <input type="range" id="pCoefB" min="1" max="9" step="1" value="4" oninput="syncParam('pCoefB','vCoefB')">
+      <input type="range" id="pCoefB" min="1" max="9" step="1" value="4" oninput="syncParam('pCoefB','vCoefB');saveParams()">
     </div>
     <div class="param">
       <label>结果个数 <span class="val" id="vCount">19</span></label>
       <div class="desc">本次要几个号（1-30 可调；大于范围大小时会出现重复号）</div>
-      <input type="range" id="pCount" min="1" max="30" step="1" value="19" oninput="syncParam('pCount','vCount')">
+      <input type="range" id="pCount" min="1" max="30" step="1" value="19" oninput="syncParam('pCount','vCount');saveParams()">
     </div>
     <div class="param">
       <label>范围 最小数</label>
       <div class="desc">推演数字下限（默认 1）</div>
-      <input type="number" id="pMin" value="1" min="1" max="2000" onchange="run()">
+      <input type="number" id="pMin" value="1" min="1" max="2000" onchange="run();saveParams()">
     </div>
     <div class="param">
       <label>范围 最大数</label>
       <div class="desc">推演数字上限（默认 49，可改成 81 / 100 等）</div>
-      <input type="number" id="pMax" value="49" min="2" max="2000" onchange="run()">
+      <input type="number" id="pMax" value="49" min="2" max="2000" onchange="run();saveParams()">
     </div>
     <div class="param" style="grid-column:1 / -1;">
       <label>本命素材库（逗号分隔，可增删）</label>
@@ -368,7 +368,7 @@
     <div class="param" style="grid-column:1 / -1;">
       <label>个性化种子（可加入范围内任意数，逗号分隔，留空则不填）</label>
       <div class="desc">例如：你的幸运数、纪念日数字。</div>
-      <input type="text" id="pSeed" placeholder="例如 52, 77">
+      <input type="text" id="pSeed" placeholder="例如 52, 77" onchange="saveParams()">
     </div>
   </div>
   <div class="row" style="margin-top:14px; gap:10px; flex-wrap:wrap;">
@@ -890,6 +890,7 @@ function resetScheme(){
   document.getElementById('pMode').value=p.reverse?'1':'0';
   document.getElementById('pSxwx').checked=p.sxwx!==0;
   document.getElementById('dateInput').value=todayStr();
+  saveParams();
   run();
 }
 
@@ -1086,6 +1087,27 @@ function zishiGan(dgn){ return ((dgn-1)%5)*2+1; } // 日干 → 子时天干序�
 
 
 const PROFILE_KEY='mrzk_benming_profile_v1';
+const PARAM_KEY='mrzk_params_v1';
+function saveParams(){
+  const g=id=>{ const el=document.getElementById(id); return el?el.value:''; };
+  const p={
+    mode:g('pMode'), sxwx:document.getElementById('pSxwx')?document.getElementById('pSxwx').checked:false,
+    gongOffset:g('pGongOffset'), coefA:g('pCoefA'), coefB:g('pCoefB'), count:g('pCount'),
+    min:g('pMin'), max:g('pMax'), seed:g('pSeed')
+  };
+  try{ localStorage.setItem(PARAM_KEY, JSON.stringify(p)); }catch(e){}
+}
+function loadParams(){
+  let p=null; try{ p=JSON.parse(localStorage.getItem(PARAM_KEY)||'null'); }catch(e){}
+  if(!p) return;
+  const set=(id,val)=>{ const el=document.getElementById(id); if(el && val!==undefined && val!==null) el.value=val; };
+  set('pMode',p.mode);
+  const sx=document.getElementById('pSxwx'); if(sx) sx.checked=!!p.sxwx;
+  set('pGongOffset',p.gongOffset); set('pCoefA',p.coefA); set('pCoefB',p.coefB); set('pCount',p.count);
+  set('pMin',p.min); set('pMax',p.max); set('pSeed',p.seed);
+  const vmap={vGongOffset:p.gongOffset, vCoefA:p.coefA, vCoefB:p.coefB, vCount:p.count};
+  for(const v in vmap){ const el=document.getElementById(v); if(el) el.textContent=vmap[v]; }
+}
 function saveProfile(){
   const g=id=>{ const el=document.getElementById(id); return el?el.value:''; };
   const prof={
@@ -1200,6 +1222,7 @@ function renderBenMingInfo(r){
     onNameInput(1);
     onNameInput(2);
   }
+  loadParams();
   run();
   renderSchemes();
   renderBenMingInfo(calcBenMing());
