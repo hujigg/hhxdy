@@ -102,6 +102,14 @@
   @media(max-width:560px){ .num-chip{width:44px;height:44px;font-size:15px;} }
   .fold-h{cursor:pointer; user-select:none; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;}
   .fold-arrow{color:var(--cinnabar); font-size:14px; transition:transform .25s;}
+  .kill-chip{
+    display:inline-block; background:#3a342e; color:#f4e9d4;
+    border-radius:6px; padding:3px 10px; font-size:13.5px; font-weight:700; margin:3px 4px 3px 0;
+  }
+  .kill-reason{font-size:12px; color:var(--muted); margin-left:6px; font-weight:400;}
+  .hist-ok{color:var(--green); font-weight:700;}
+  .hist-no{color:var(--cinnabar); font-weight:700;}
+  .hist-pending{color:var(--muted);}
 </style>
 </head>
 <body>
@@ -125,6 +133,13 @@
     <span class="tag" id="gzLabel"></span>
     <span class="tag" id="jieqiLabel"></span>
   </div>
+  <div class="row date-bar" style="margin-top:12px; padding-top:12px; border-top:1px dashed var(--line);">
+    <label style="font-weight:600; color:var(--cinnabar);" id="refLabel">请填写今日最终结果</label>
+    <input type="number" id="refInput" min="1" max="2000" placeholder="如 23" style="width:90px; padding:7px 10px; border:1px solid var(--line); border-radius:6px; font-size:14px;">
+    <button class="btn ghost" onclick="saveRefResult()">保存结果</button>
+    <button class="btn ghost" onclick="undoRef()">撤销上一填</button>
+    <span class="muted small" id="refStatus"></span>
+  </div>
 </div>
 
 <!-- 今日历法信息 -->
@@ -147,82 +162,9 @@
 </div>
   </div>
 
-<!-- 参数面板 -->
-<div class="card foldable" data-fold="c2">
-  <h2 class="fold-h" onclick="toggleFold('c2')">二 · 可调参数（改完点“今日推演”刷新） <span class="fold-arrow">▾</span></h2>
-    <div class="fold-body">
-  <div class="param-grid">
-    <div class="param" style="grid-column:1 / -1;">
-      <label>推演模式
-        <select id="pMode" onchange="run()" style="margin-left:10px;padding:4px 8px;border:1px solid var(--line);border-radius:6px;">
-          <option value="0">正常版（吉神正用）</option>
-          <option value="1" selected>逆天版（冲煞反用）</option>
-        </select>
-      </label>
-      <div class="desc">正常版用当日吉神方向；逆天版用冲煞、相克五行，宫位/动爻方向全反，结果风格相反。</div>
-    </div>
-    <div class="param" style="grid-column:1 / -1;">
-      <label><input type="checkbox" id="pSxwx" onchange="run()" style="vertical-align:-2px; margin-right:4px;">生肖五行对照（1-49 图例）</label>
-      <div class="desc">按当日生肖、五行取对照号码入素材；逆天版自动换用相冲生肖、相克五行。</div>
-    </div>
-    <div class="param">
-      <label>本命日签数 <span class="val" id="vDayQian">0</span></label>
-      <div class="desc">每天有几个本命素材入号（0=纯动态，3=专属感最强）</div>
-      <input type="range" id="pDayQian" min="0" max="3" step="1" value="0" oninput="syncParam('pDayQian','vDayQian');saveProfile()">
-    </div>
-    <div class="param">
-      <label>宫位偏移 <span class="val" id="vGongOffset">-1</span></label>
-      <div class="desc">让号偏重某个区间（-4 ~ +4 宫）</div>
-      <input type="range" id="pGongOffset" min="-4" max="4" step="1" value="-1" oninput="syncParam('pGongOffset','vGongOffset')">
-    </div>
-    <div class="param">
-      <label>行位系数 A <span class="val" id="vCoefA">4</span></label>
-      <div class="desc">行位公式：动爻 × A（改行走节奏）</div>
-      <input type="range" id="pCoefA" min="1" max="9" step="1" value="4" oninput="syncParam('pCoefA','vCoefA')">
-    </div>
-    <div class="param">
-      <label>行位系数 B <span class="val" id="vCoefB">4</span></label>
-      <div class="desc">行位公式：变卦序 × B</div>
-      <input type="range" id="pCoefB" min="1" max="9" step="1" value="4" oninput="syncParam('pCoefB','vCoefB')">
-    </div>
-    <div class="param">
-      <label>结果个数 <span class="val" id="vCount">19</span></label>
-      <div class="desc">本次要几个号（1-30 可调；大于范围大小时会出现重复号）</div>
-      <input type="range" id="pCount" min="1" max="30" step="1" value="19" oninput="syncParam('pCount','vCount')">
-    </div>
-    <div class="param">
-      <label>范围 最小数</label>
-      <div class="desc">推演数字下限（默认 1）</div>
-      <input type="number" id="pMin" value="1" min="1" max="2000" onchange="run()">
-    </div>
-    <div class="param">
-      <label>范围 最大数</label>
-      <div class="desc">推演数字上限（默认 49，可改成 81 / 100 等）</div>
-      <input type="number" id="pMax" value="49" min="2" max="2000" onchange="run()">
-    </div>
-    <div class="param" style="grid-column:1 / -1;">
-      <label>本命素材库（逗号分隔，可增删）</label>
-      <div class="desc">默认空=无本命；到"五 · 本命资料"填姓名/生辰/时辰后点生成，即为个性化本命。</div>
-      <input type="text" id="pBenMing" value="" placeholder="默认空，可填写或自动生成" onchange="saveProfile()">
-    </div>
-    <div class="param" style="grid-column:1 / -1;">
-      <label>个性化种子（可加入范围内任意数，逗号分隔，留空则不填）</label>
-      <div class="desc">例如：你的幸运数、纪念日数字。</div>
-      <input type="text" id="pSeed" placeholder="例如 52, 77">
-    </div>
-  </div>
-  <div class="row" style="margin-top:14px; gap:10px; flex-wrap:wrap;">
-    <button class="btn" onclick="saveScheme()">保存当前方案</button>
-    <button class="btn ghost" onclick="resetScheme()">复位默认方案</button>
-    <button class="btn ghost" onclick="copyNums()">复制当前号码</button>
-  </div>
-  <div id="schemeList" style="margin-top:16px;"></div>
-</div>
-  </div>
-
 <!-- 结果 -->
 <div class="card foldable" data-fold="c3">
-  <h2 class="fold-h" onclick="toggleFold('c3')">三 · 今日推演结果 <span class="fold-arrow">▾</span></h2>
+  <h2 class="fold-h" onclick="toggleFold('c3')">二 · 今日推演结果 <span class="fold-arrow">▾</span></h2>
     <div class="fold-body">
   <div class="row" style="justify-content:flex-end; margin-bottom:6px;">
     <button class="btn ghost" onclick="copyNums()">复制号码</button>
@@ -238,9 +180,34 @@
 </div>
   </div>
 
+<!-- 建议杀码 -->
+<div class="card foldable" data-fold="c6">
+  <h2 class="fold-h" onclick="toggleFold('c6')">三 · 建议杀码（历史依据版） <span class="fold-arrow">▾</span></h2>
+    <div class="fold-body">
+  <div class="row" style="gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:6px;">
+    <label class="small">统计窗口（天）</label>
+    <input type="number" id="killW" min="7" max="180" style="width:70px; padding:5px 8px; border:1px solid var(--line); border-radius:6px;" onchange="saveKillCfg()">
+    <label class="small">入选≥（次）</label>
+    <input type="number" id="killX" min="2" max="60" style="width:70px; padding:5px 8px; border:1px solid var(--line); border-radius:6px;" onchange="saveKillCfg()">
+    <span class="muted small">口径：近 N 天“推演号里反复出现、但从未命中参考号”的号，建议从今日名单中剔除（数量随每日情况浮动，仅供参考）</span>
+  </div>
+  <div id="killSuggest" style="margin-top:6px;"></div>
+  <p class="small muted" style="margin-top:8px;">依据来自本机历史记录（每日推演号码自动留存 + 你保存的参考号）。杀码只是“换血建议”，历史高频不中 ≠ 未来不中，请勿当作规律。</p>
+</div>
+  </div>
+
+<!-- 历史记录 -->
+<div class="card foldable" data-fold="c7">
+  <h2 class="fold-h" onclick="toggleFold('c7')">四 · 历史记录（近一年） <span class="fold-arrow">▾</span></h2>
+    <div class="fold-body">
+  <div id="historyTable" style="overflow-x:auto;"></div>
+  <p class="small muted" style="margin-top:8px;">每日点“今日推演”后自动留存号码；参考号在顶部每日填写后判定 ✅/❌。数据仅存本机浏览器。</p>
+</div>
+  </div>
+
 <!-- 反向求解 -->
 <div class="card foldable" data-fold="c4">
-  <h2 class="fold-h" onclick="toggleFold('c4')">四 · 反向求解（目标反推） <span class="fold-arrow">▾</span></h2>
+  <h2 class="fold-h" onclick="toggleFold('c4')">五 · 反向求解（目标反推） <span class="fold-arrow">▾</span></h2>
     <div class="fold-body">
   <div class="row" style="justify-content:flex-start; flex-wrap:wrap; gap:10px;">
     <label>目标号码：</label>
@@ -254,7 +221,7 @@
 
 <!-- 速查表 -->
 <div class="card foldable" data-fold="c5">
-  <h2 class="fold-h" onclick="toggleFold('c5')">五 · 速查表 & 规则 <span class="fold-arrow">▾</span></h2>
+  <h2 class="fold-h" onclick="toggleFold('c5')">六 · 速查表 & 规则 <span class="fold-arrow">▾</span></h2>
     <div class="fold-body">
   <details open>
     <summary>本命资料（可修改 —— 自动生成本命素材库）</summary>
@@ -337,6 +304,79 @@
       <tr><td>本命素材库（写回参数面板）</td><td id="bmPool"></td></tr>
     </table>
   </details>
+</div>
+  </div>
+
+<!-- 参数面板（不常用，放最后） -->
+<div class="card foldable" data-fold="c2">
+  <h2 class="fold-h" onclick="toggleFold('c2')">七 · 可调参数（改完点“今日推演”刷新） <span class="fold-arrow">▾</span></h2>
+    <div class="fold-body">
+  <div class="param-grid">
+    <div class="param" style="grid-column:1 / -1;">
+      <label>推演模式
+        <select id="pMode" onchange="run()" style="margin-left:10px;padding:4px 8px;border:1px solid var(--line);border-radius:6px;">
+          <option value="0">正常版（吉神正用）</option>
+          <option value="1" selected>逆天版（冲煞反用）</option>
+        </select>
+      </label>
+      <div class="desc">正常版用当日吉神方向；逆天版用冲煞、相克五行，宫位/动爻方向全反，结果风格相反。</div>
+    </div>
+    <div class="param" style="grid-column:1 / -1;">
+      <label><input type="checkbox" id="pSxwx" onchange="run()" style="vertical-align:-2px; margin-right:4px;">生肖五行对照（1-49 图例）</label>
+      <div class="desc">按当日生肖、五行取对照号码入素材；逆天版自动换用相冲生肖、相克五行。</div>
+    </div>
+    <div class="param">
+      <label>本命日签数 <span class="val" id="vDayQian">0</span></label>
+      <div class="desc">每天有几个本命素材入号（0=纯动态，3=专属感最强）</div>
+      <input type="range" id="pDayQian" min="0" max="3" step="1" value="0" oninput="syncParam('pDayQian','vDayQian');saveProfile()">
+    </div>
+    <div class="param">
+      <label>宫位偏移 <span class="val" id="vGongOffset">-1</span></label>
+      <div class="desc">让号偏重某个区间（-4 ~ +4 宫）</div>
+      <input type="range" id="pGongOffset" min="-4" max="4" step="1" value="-1" oninput="syncParam('pGongOffset','vGongOffset')">
+    </div>
+    <div class="param">
+      <label>行位系数 A <span class="val" id="vCoefA">4</span></label>
+      <div class="desc">行位公式：动爻 × A（改行走节奏）</div>
+      <input type="range" id="pCoefA" min="1" max="9" step="1" value="4" oninput="syncParam('pCoefA','vCoefA')">
+    </div>
+    <div class="param">
+      <label>行位系数 B <span class="val" id="vCoefB">4</span></label>
+      <div class="desc">行位公式：变卦序 × B</div>
+      <input type="range" id="pCoefB" min="1" max="9" step="1" value="4" oninput="syncParam('pCoefB','vCoefB')">
+    </div>
+    <div class="param">
+      <label>结果个数 <span class="val" id="vCount">19</span></label>
+      <div class="desc">本次要几个号（1-30 可调；大于范围大小时会出现重复号）</div>
+      <input type="range" id="pCount" min="1" max="30" step="1" value="19" oninput="syncParam('pCount','vCount')">
+    </div>
+    <div class="param">
+      <label>范围 最小数</label>
+      <div class="desc">推演数字下限（默认 1）</div>
+      <input type="number" id="pMin" value="1" min="1" max="2000" onchange="run()">
+    </div>
+    <div class="param">
+      <label>范围 最大数</label>
+      <div class="desc">推演数字上限（默认 49，可改成 81 / 100 等）</div>
+      <input type="number" id="pMax" value="49" min="2" max="2000" onchange="run()">
+    </div>
+    <div class="param" style="grid-column:1 / -1;">
+      <label>本命素材库（逗号分隔，可增删）</label>
+      <div class="desc">默认空=无本命；到"六 · 本命资料"填姓名/生辰/时辰后点生成，即为个性化本命。</div>
+      <input type="text" id="pBenMing" value="" placeholder="默认空，可填写或自动生成" onchange="saveProfile()">
+    </div>
+    <div class="param" style="grid-column:1 / -1;">
+      <label>个性化种子（可加入范围内任意数，逗号分隔，留空则不填）</label>
+      <div class="desc">例如：你的幸运数、纪念日数字。</div>
+      <input type="text" id="pSeed" placeholder="例如 52, 77">
+    </div>
+  </div>
+  <div class="row" style="margin-top:14px; gap:10px; flex-wrap:wrap;">
+    <button class="btn" onclick="saveScheme()">保存当前方案</button>
+    <button class="btn ghost" onclick="resetScheme()">复位默认方案</button>
+    <button class="btn ghost" onclick="copyNums()">复制当前号码</button>
+  </div>
+  <div id="schemeList" style="margin-top:16px;"></div>
 </div>
   </div>
 
@@ -674,6 +714,13 @@ function run(){
 
   // 九宫段表
   document.getElementById('jiugong').innerHTML=renderJiugong(out.min, out.max, out.nums);
+
+  // 自动留存今日推演（供杀码统计与历史记录）
+  lastNums=out.nums.slice();
+  lastDateStr=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  recordDraw(lastDateStr, out.nums);
+  renderKillSuggest();
+  renderHistory();
 }
 
 function todayStr(){
@@ -871,6 +918,161 @@ function renderSchemes(){
   box.innerHTML=html;
 }
 
+/* ========== 参考号 & 历史记录 & 建议杀码 ========== */
+const REFS_KEY='ztk_refs_v1';
+const DRAWS_KEY='ztk_draws_v1';
+const KILL_CFG_KEY='ztk_killcfg_v1';
+let lastNums=[], lastDateStr='';
+
+function loadJSON(key, dft){ try{ const v=JSON.parse(localStorage.getItem(key)); return (v===null||v===undefined)?dft:v; }catch(e){ return dft; } }
+function saveJSON(key, obj){ try{ localStorage.setItem(key, JSON.stringify(obj)); }catch(e){} }
+function getRefs(){ return loadJSON(REFS_KEY, {}); }
+function getDraws(){ return loadJSON(DRAWS_KEY, {}); }
+function recordDraw(dateStr, nums){
+  const m=getDraws();
+  m[dateStr]=nums.slice();
+  saveJSON(DRAWS_KEY, m);
+}
+function fmtDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function refLabelText(ds){
+  const p=ds.split('-');
+  return '请填写 '+ (+p[0])+'年'+(+p[1])+'月'+(+p[2])+'日 的最终结果';
+}
+function pendingRefDate(){
+  // 按日历逐日推进：从最早填写日（或今天）起，逐日返回第一个未填写的日期；
+  // 过去有遗漏就停留在遗漏日，全部填完自动顺延到次日
+  const refs=getRefs();
+  const ds=Object.keys(refs).sort();
+  const today=todayStr();
+  let start=(ds.length&&ds[0]<today)?ds[0]:today;
+  const p=start.split('-');
+  let d=new Date(+p[0], +p[1]-1, +p[2]);
+  for(;;){
+    const s=fmtDate(d);
+    if(refs[s]===undefined) return s;
+    d.setDate(d.getDate()+1);
+  }
+}
+function saveRefResult(){
+  const d=pendingRefDate();
+  const v=Math.round(+document.getElementById('refInput').value);
+  if(!v||v<1||v>2000){ alert('请输入 1-2000 之间的最终结果'); return; }
+  const m=getRefs(); m[d]=v; saveJSON(REFS_KEY, m);
+  const next=pendingRefDate();
+  document.getElementById('refInput').value='';
+  document.getElementById('refLabel').textContent=refLabelText(next);
+  const st=document.getElementById('refStatus');
+  st.textContent='已保存 '+d+' → '+v+'，待填写 '+next;
+  renderHistory(); renderKillSuggest();
+  setTimeout(()=>{ st.textContent=''; }, 5000);
+}
+function undoRef(){
+  const m=getRefs();
+  const ds=Object.keys(m).sort();
+  if(!ds.length){ alert('还没有已填记录'); return; }
+  const last=ds[ds.length-1];
+  delete m[last]; saveJSON(REFS_KEY, m);
+  document.getElementById('refLabel').textContent=refLabelText(pendingRefDate());
+  const st=document.getElementById('refStatus');
+  st.textContent='已撤销 '+last+' 的记录';
+  renderHistory(); renderKillSuggest();
+  setTimeout(()=>{ st.textContent=''; }, 4000);
+}
+function getKillCfg(){
+  const c=loadJSON(KILL_CFG_KEY,{W:30,X:8});
+  return { W:Math.max(7,Math.min(180,+c.W||30)), X:Math.max(2,Math.min(60,+c.X||8)) };
+}
+function saveKillCfg(){
+  const W=Math.max(7,Math.min(180,+document.getElementById('killW').value||30));
+  const X=Math.max(2,Math.min(60,+document.getElementById('killX').value||8));
+  saveJSON(KILL_CFG_KEY,{W,X});
+  renderKillSuggest();
+}
+function renderKillSuggest(){
+  const box=document.getElementById('killSuggest'); if(!box) return;
+  const cfg=getKillCfg();
+  document.getElementById('killW').value=cfg.W;
+  document.getElementById('killX').value=cfg.X;
+  const draws=getDraws(), refs=getRefs();
+  const dateStr=document.getElementById('dateInput').value||todayStr();
+  const nums=lastNums;
+  if(!nums.length){ box.innerHTML='<p class="muted">请先点“今日推演”生成号码。</p>'; return; }
+  const days=Object.keys(draws).filter(d=>d<dateStr).sort();
+  const win=days.slice(-cfg.W);
+  if(win.length<3){ box.innerHTML='<p class="muted">历史记录不足（至少 3 天）：每天点“今日推演”即自动留存号码，够天数后这里会出现建议杀码。</p>'; return; }
+  const pick={}, hit={}, lastPick={};
+  for(const d of win){
+    const arr=draws[d]||[];
+    arr.forEach(n=>{ pick[n]=(pick[n]||0)+1; lastPick[n]=d; });
+    const rv=refs[d];
+    if(rv!==undefined && arr.includes(rv)) hit[rv]=(hit[rv]||0)+1;
+  }
+  const sug=[];
+  for(const n of nums){
+    if((pick[n]||0)>=cfg.X && (hit[n]||0)===0){
+      sug.push({n, pick:pick[n], days:Math.max(0,Math.round((new Date(dateStr)-new Date(lastPick[n]))/86400000))});
+    }
+  }
+  sug.sort((a,b)=>b.pick-a.pick);
+  if(!sug.length){
+    box.innerHTML='<p class="muted">今日无建议杀码：近 '+cfg.W+' 天没有“入选≥'+cfg.X+' 次且 0 命中”的在列号。</p>';
+    return;
+  }
+  const copyStr=sug.map(s=>String(s.n).padStart(2,'0')).join(' ');
+  const list=sug.map(s=>'<span class="kill-chip">'+String(s.n).padStart(2,'0')+'<span class="kill-reason">近'+cfg.W+'天入选 '+s.pick+' 次 · 0 命中 · '+s.days+'天前还在</span></span>').join('');
+  box.innerHTML='<p class="small" style="font-weight:600;color:var(--cinnabar);margin-bottom:6px;">今日建议杀 '+sug.length+' 个（从当前 '+nums.length+' 码中剔除）：</p>'
+    +'<div style="margin-bottom:8px;">'+list+'</div>'
+    +'<button class="btn ghost" onclick="copyText(\''+copyStr+'\',\'已复制建议杀码（升序）：'+copyStr+'\')">复制建议杀码</button>'
+    +'<p class="small muted" style="margin-top:8px;">统计区间：'+win[0]+' ~ '+win[win.length-1]+'（共 '+win.length+' 天，不含今日）。</p>';
+}
+function renderHistory(){
+  const box=document.getElementById('historyTable'); if(!box) return;
+  const draws=getDraws(), refs=getRefs();
+  const today=todayStr();
+  const allD=[...Object.keys(draws), ...Object.keys(refs)].sort();
+  if(!allD.length){ box.innerHTML='<p class="muted">还没有历史记录。每天点“今日推演”后自动留存，参考号在顶部每日填写后判定 ✅/❌。</p>'; return; }
+  const sp=allD[0].split('-');
+  let d=new Date(+sp[0], +sp[1]-1, +sp[2]);
+  const tp=today.split('-');
+  const td=new Date(+tp[0], +tp[1]-1, +tp[2]);
+  const rows=[]; let hits=0, judged=0, total=0;
+  for(;;){
+    const ds=fmtDate(d);
+    if(d>td) break;
+    total++;
+    const arr=(draws[ds]||[]).slice().sort((a,b)=>a-b).map(n=>String(n).padStart(2,'0'));
+    const rv=refs[ds];
+    let mark;
+    if(rv===undefined){ mark='<span class="hist-pending">未录</span>'; }
+    else if(!arr.length){ mark='<span class="hist-pending">未推演</span>'; }
+    else { judged++; mark=arr.includes(String(rv).padStart(2,'0'))?'<span class="hist-ok">✅</span>':'<span class="hist-no">❌</span>'; if(mark.indexOf('ok')>=0) hits++; }
+    const copyStr=arr.join(' ');
+    rows.push('<tr><td>'+ds+'</td><td style="text-align:left;font-size:12px;">'+(arr.length?arr.join(' '):'—')+'</td><td>'+(rv!==undefined?String(rv).padStart(2,'0'):'—')+'</td><td>'+mark+'</td><td>'+(arr.length?'<button class="btn ghost" style="padding:2px 10px;font-size:12px;" onclick="copyText(\''+copyStr+'\',\'已复制 '+ds+' 号码：'+copyStr+'\')">复制</button>':'')+'</td></tr>');
+    d.setDate(d.getDate()+1);
+  }
+  // 倒序：最新日期在最上面
+  rows.reverse();
+  // 默认只显示近 7 天，其余折叠，展开/收起按钮在表格上下各一
+  let expanded=false;
+  try{ expanded=localStorage.getItem('ztk_hist_expand')==='1'; }catch(e){}
+  let shownRows=rows, btnTop='', btnBottom='';
+  if(rows.length>7){
+    if(!expanded) shownRows=rows.slice(0,7);
+    const label=expanded?'只显示近 7 天':'展开全部（共 '+rows.length+' 天）';
+    const btn='<div style="text-align:center;"><button class="btn ghost" onclick="toggleHistExpand()">'+label+'</button></div>';
+    btnTop='<div style="margin-bottom:8px;">'+btn+'</div>';
+    btnBottom='<div style="margin-top:8px;">'+btn+'</div>';
+  }
+  box.innerHTML='<p class="small" style="font-weight:600;color:var(--cinnabar);margin-bottom:6px;">'+allD[0]+' ~ '+today+' 共 '+total+' 天 · 已判定 '+judged+' 天 · 命中 '+hits+' 天'+(judged?'（'+(hits/judged*100).toFixed(1)+'%）':'')+'</p>'
+    +btnTop
+    +'<table><tr><th>日期</th><th>推演号码（升序）</th><th>参考号</th><th>结果</th><th></th></tr>'+shownRows.join('')+'</table>'
+    +btnBottom;
+}
+function toggleHistExpand(){
+  try{ localStorage.setItem('ztk_hist_expand', localStorage.getItem('ztk_hist_expand')==='1'?'0':'1'); }catch(e){}
+  renderHistory();
+}
+
 /* ========== 本命资料 → 生成本命素材库 ========== */
 function approxZhi(m,d){
   // 公历月/日 → 月支（地支序数 子=1）；用各月节气日近似判断节前/节后
@@ -1001,6 +1203,9 @@ function renderBenMingInfo(r){
   run();
   renderSchemes();
   renderBenMingInfo(calcBenMing());
+  renderHistory();
+  renderKillSuggest();
+  document.getElementById('refLabel').textContent=refLabelText(pendingRefDate());
 })();
 </script>
 </body>
