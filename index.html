@@ -156,13 +156,13 @@
       <label>推演模式
         <select id="pMode" onchange="run()" style="margin-left:10px;padding:4px 8px;border:1px solid var(--line);border-radius:6px;">
           <option value="0">正常版（吉神正用）</option>
-          <option value="1">逆天版（冲煞反用）</option>
+          <option value="1" selected>逆天版（冲煞反用）</option>
         </select>
       </label>
       <div class="desc">正常版用当日吉神方向；逆天版用冲煞、相克五行，宫位/动爻方向全反，结果风格相反。</div>
     </div>
     <div class="param" style="grid-column:1 / -1;">
-      <label><input type="checkbox" id="pSxwx" checked onchange="run()" style="vertical-align:-2px; margin-right:4px;">生肖五行对照（1-49 图例）</label>
+      <label><input type="checkbox" id="pSxwx" onchange="run()" style="vertical-align:-2px; margin-right:4px;">生肖五行对照（1-49 图例）</label>
       <div class="desc">按当日生肖、五行取对照号码入素材；逆天版自动换用相冲生肖、相克五行。</div>
     </div>
     <div class="param">
@@ -171,24 +171,24 @@
       <input type="range" id="pDayQian" min="0" max="3" step="1" value="0" oninput="syncParam('pDayQian','vDayQian');saveProfile()">
     </div>
     <div class="param">
-      <label>宫位偏移 <span class="val" id="vGongOffset">0</span></label>
+      <label>宫位偏移 <span class="val" id="vGongOffset">-1</span></label>
       <div class="desc">让号偏重某个区间（-4 ~ +4 宫）</div>
-      <input type="range" id="pGongOffset" min="-4" max="4" step="1" value="0" oninput="syncParam('pGongOffset','vGongOffset')">
+      <input type="range" id="pGongOffset" min="-4" max="4" step="1" value="-1" oninput="syncParam('pGongOffset','vGongOffset')">
     </div>
     <div class="param">
-      <label>行位系数 A <span class="val" id="vCoefA">1</span></label>
+      <label>行位系数 A <span class="val" id="vCoefA">4</span></label>
       <div class="desc">行位公式：动爻 × A（改行走节奏）</div>
-      <input type="range" id="pCoefA" min="1" max="9" step="1" value="1" oninput="syncParam('pCoefA','vCoefA')">
+      <input type="range" id="pCoefA" min="1" max="9" step="1" value="4" oninput="syncParam('pCoefA','vCoefA')">
     </div>
     <div class="param">
-      <label>行位系数 B <span class="val" id="vCoefB">1</span></label>
+      <label>行位系数 B <span class="val" id="vCoefB">4</span></label>
       <div class="desc">行位公式：变卦序 × B</div>
-      <input type="range" id="pCoefB" min="1" max="9" step="1" value="1" oninput="syncParam('pCoefB','vCoefB')">
+      <input type="range" id="pCoefB" min="1" max="9" step="1" value="4" oninput="syncParam('pCoefB','vCoefB')">
     </div>
     <div class="param">
-      <label>结果个数 <span class="val" id="vCount">11</span></label>
+      <label>结果个数 <span class="val" id="vCount">18</span></label>
       <div class="desc">本次要几个号（1-30 可调；大于范围大小时会出现重复号）</div>
-      <input type="range" id="pCount" min="1" max="30" step="1" value="11" oninput="syncParam('pCount','vCount')">
+      <input type="range" id="pCount" min="1" max="30" step="1" value="18" oninput="syncParam('pCount','vCount')">
     </div>
     <div class="param">
       <label>范围 最小数</label>
@@ -785,7 +785,7 @@ function applyReverse(A,B,off,dq){
 
 /* ========== 方案历史 ========== */
 const SCHEME_KEY='mrzk_schemes_v1';
-const DEFAULTS={dayQian:0,gongOffset:0,coefA:1,coefB:1,count:11,min:1,max:49,benMing:[],seed:[],reverse:0,sxwx:1};
+const DEFAULTS={dayQian:0,gongOffset:-1,coefA:4,coefB:4,count:18,min:1,max:49,benMing:[],seed:[],reverse:1,sxwx:0};
 
 function loadSchemes(){ try{ return JSON.parse(localStorage.getItem(SCHEME_KEY)||'[]'); }catch(e){ return []; } }
 function saveSchemes(list){ localStorage.setItem(SCHEME_KEY, JSON.stringify(list)); }
